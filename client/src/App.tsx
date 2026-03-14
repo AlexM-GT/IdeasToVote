@@ -8,6 +8,7 @@ type Idea = {
   description: string | null;
   userId: number;
   createdAt: string;
+  userVote: number | null;
 };
 
 type AuthState = {
@@ -154,6 +155,14 @@ export function App() {
 
       const payload = (await response.json()) as Idea[];
       setIdeas(payload);
+
+      const initialRatings: Record<number, number> = {};
+      for (const idea of payload) {
+        if (idea.userVote !== null && idea.userVote !== undefined) {
+          initialRatings[idea.id] = idea.userVote;
+        }
+      }
+      setRatings(initialRatings);
     } catch {
       setIdeasError('Unable to connect to the API.');
       setIdeas([]);
@@ -380,18 +389,29 @@ export function App() {
     }
   }
 
-  function rateIdea(id: number, value: number): void {
-    setRatings((current) => ({
-      ...current,
-      [id]: value
-    }));
+  async function rateIdea(id: number, value: number): Promise<void> {
+    if (!auth?.token) return;
+
+    setRatings((current) => ({ ...current, [id]: value }));
+
+    try {
+      await fetch(`${API_BASE_URL}/api/votes/${id}`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ value }),
+      });
+    } catch {
+      // Optimistic update remains; silently ignore network errors
+    }
   }
 
   return (
     <div className="app-shell">
       <header className="topbar">
         <div>
-          <p className="eyebrow">Ideas to vote</p>
           <h1>Team ideas</h1>
           <p className="subtitle">View them! Like them!</p>
         </div>
@@ -440,8 +460,8 @@ export function App() {
           <section className="panel ideas-section">
             <header className="ideas-section-head">
               <div>
-                <h2>Ideas</h2>
-                <p className="subtitle-small">Team backlog</p>
+                <h2>Team ideas</h2>
+                <p className="subtitle-small">View them! Like them!</p>
               </div>
               <button
                 type="button"
@@ -479,7 +499,7 @@ export function App() {
                             type="button"
                             className="star-button"
                             aria-label={`Rate ${value} stars`}
-                            onClick={() => rateIdea(idea.id, value)}
+                            onClick={() => { void rateIdea(idea.id, value); }}
                           >
                             <StarIcon filled={(ratings[idea.id] ?? 0) >= value} />
                           </button>

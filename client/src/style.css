@@ -140,7 +140,7 @@ h1 {
   border: 1px solid var(--line);
   border-radius: 14px;
   background: var(--panel);
-  padding: 1rem 1.2rem;
+  padding: 1.25rem 1.25rem;
 }
 
 .notice h2,
@@ -208,6 +208,7 @@ textarea:focus {
 
 .ideas-section {
   margin-top: 1rem;
+  border-radius: 16px;
 }
 
 .ideas-section-head {
@@ -215,7 +216,7 @@ textarea:focus {
   align-items: start;
   justify-content: space-between;
   gap: 0.8rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.15rem;
 }
 
 .subtitle-small {
@@ -224,28 +225,28 @@ textarea:focus {
 }
 
 .add-idea-btn {
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
 }
 
 .cards-grid {
   display: grid;
-  gap: 0.95rem;
+  gap: 1rem;
 }
 
 .idea-card {
   border: 1px solid var(--line);
   background: var(--panel);
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
   display: grid;
-  grid-template-columns: 220px 1fr;
+  grid-template-columns: 230px 1fr;
 }
 
 .idea-image {
   width: 100%;
   height: 100%;
-  min-height: 180px;
+  min-height: 164px;
   object-fit: cover;
   background: #eceff2;
 }
@@ -257,7 +258,7 @@ textarea:focus {
 }
 
 .idea-body {
-  padding: 0.9rem;
+  padding: 0.95rem;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 1rem;
@@ -318,7 +319,9 @@ textarea:focus {
 }
 
 .pagination {
-  margin-top: 1rem;
+  margin-top: 1.1rem;
+  padding-top: 0.95rem;
+  border-top: 1px solid var(--line);
   display: flex;
   align-items: center;
   justify-content: center;

@@ -7,4 +7,5 @@ public sealed class IdeaResponse
     public string? Description { get; init; }
     public int UserId { get; init; }
     public DateTime CreatedAt { get; init; }
+    public int? UserVote { get; init; }
 }

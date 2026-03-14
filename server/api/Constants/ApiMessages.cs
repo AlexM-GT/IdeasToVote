@@ -15,5 +15,6 @@ public static class ApiMessages
     public const string UserNotFound = "User not found.";
     public const string IdeaNotFound = "Idea not found.";
     public const string IdeaTitleRequired = "Idea title is required.";
+    public const string VoteValueInvalid = "Vote value must be between 1 and 5.";
     public const string UnexpectedError = "An unexpected error occurred.";
 }

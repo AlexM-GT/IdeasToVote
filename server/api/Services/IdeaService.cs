@@ -8,7 +8,7 @@ namespace IdeasToVote.Api.Services;
 
 public class IdeaService(ApplicationDbContext dbContext) : IIdeaService
 {
-    public async Task<IReadOnlyList<IdeaResponse>> GetAllIdeasAsync()
+    public async Task<IReadOnlyList<IdeaResponse>> GetAllIdeasAsync(int authenticatedUserId)
     {
         return await dbContext.Ideas
             .AsNoTracking()
@@ -19,12 +19,16 @@ public class IdeaService(ApplicationDbContext dbContext) : IIdeaService
                 Title = i.Title,
                 Description = i.Description,
                 UserId = i.UserId,
-                CreatedAt = i.CreatedAt
+                CreatedAt = i.CreatedAt,
+                UserVote = i.Votes
+                    .Where(v => v.UserId == authenticatedUserId)
+                    .Select(v => (int?)v.Value)
+                    .FirstOrDefault()
             })
             .ToListAsync();
     }
 
-    public async Task<IdeaResponse?> GetIdeaByIdAsync(int id)
+    public async Task<IdeaResponse?> GetIdeaByIdAsync(int id, int authenticatedUserId)
     {
         return await dbContext.Ideas
             .AsNoTracking()
@@ -35,7 +39,11 @@ public class IdeaService(ApplicationDbContext dbContext) : IIdeaService
                 Title = i.Title,
                 Description = i.Description,
                 UserId = i.UserId,
-                CreatedAt = i.CreatedAt
+                CreatedAt = i.CreatedAt,
+                UserVote = i.Votes
+                    .Where(v => v.UserId == authenticatedUserId)
+                    .Select(v => (int?)v.Value)
+                    .FirstOrDefault()
             })
             .FirstOrDefaultAsync();
     }

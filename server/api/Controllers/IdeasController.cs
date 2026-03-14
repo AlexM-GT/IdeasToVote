@@ -15,14 +15,24 @@ public class IdeasController(IIdeaService ideaService) : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<IdeaResponse>>> GetAllIdeas()
     {
-        var ideas = await ideaService.GetAllIdeasAsync();
+        if (!TryGetAuthenticatedUserId(out var authenticatedUserId))
+        {
+            return Unauthorized(new ApiMessageResponse { Message = ApiMessages.InvalidAuthenticationToken });
+        }
+
+        var ideas = await ideaService.GetAllIdeasAsync(authenticatedUserId);
         return Ok(ideas);
     }
 
     [HttpGet("{id:int}")]
     public async Task<ActionResult<IdeaResponse>> GetIdea([FromRoute] int id)
     {
-        var idea = await ideaService.GetIdeaByIdAsync(id);
+        if (!TryGetAuthenticatedUserId(out var authenticatedUserId))
+        {
+            return Unauthorized(new ApiMessageResponse { Message = ApiMessages.InvalidAuthenticationToken });
+        }
+
+        var idea = await ideaService.GetIdeaByIdAsync(id, authenticatedUserId);
 
         if (idea is null)
         {
