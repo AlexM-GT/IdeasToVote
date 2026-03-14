@@ -3,17 +3,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IdeasToVote.Api.Services;
 
-public enum DeleteUserResult
-{
-    NotFound,
-    Deleted
-}
-
-public interface IUserService
-{
-    Task<DeleteUserResult> DeleteUserAsync(int userId);
-}
-
 public class UserService(ApplicationDbContext dbContext) : IUserService
 {
     public async Task<DeleteUserResult> DeleteUserAsync(int userId)

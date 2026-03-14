@@ -1,20 +1,12 @@
 using System.Security.Cryptography;
-using System.Text;
 
 namespace IdeasToVote.Api.Services;
-
-public interface IPasswordService
-{
-    (string Hash, string Salt) HashPassword(string password);
-    bool VerifyPassword(string password, string hash, string salt);
-}
 
 public class PasswordService : IPasswordService
 {
     private const int SaltSize = 16;
     private const int KeySize = 32;
     private const int Iterations = 10000;
-    private const char Delimiter = ':';
 
     public (string Hash, string Salt) HashPassword(string password)
     {

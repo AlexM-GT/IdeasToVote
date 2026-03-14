@@ -8,11 +8,6 @@ using System.Text;
 
 namespace IdeasToVote.Api.Services;
 
-public interface ITokenService
-{
-    string GenerateToken(User user);
-}
-
 public class TokenService : ITokenService
 {
     private readonly JwtSettings _jwtSettings;

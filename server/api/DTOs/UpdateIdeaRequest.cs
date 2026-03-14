@@ -1,0 +1,7 @@
+namespace IdeasToVote.Api.DTOs;
+
+public sealed class UpdateIdeaRequest
+{
+    public string Title { get; set; } = string.Empty;
+    public string? Description { get; set; }
+}
