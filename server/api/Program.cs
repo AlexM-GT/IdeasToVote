@@ -1,6 +1,9 @@
 using IdeasToVote.Api.Data;
+using IdeasToVote.Api.Constants;
+using IdeasToVote.Api.DTOs;
 using IdeasToVote.Api.Services;
 using IdeasToVote.Api.Settings;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -17,6 +20,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 // Configure JWT authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
@@ -56,6 +61,54 @@ if (app.Environment.IsDevelopment())
         options.Title = "IdeasToVote API";
     });
 }
+
+app.UseExceptionHandler(exceptionHandlerApp =>
+{
+    exceptionHandlerApp.Run(async context =>
+    {
+        var exceptionFeature = context.Features.Get<IExceptionHandlerFeature>();
+        if (exceptionFeature is not null)
+        {
+            var logger = context.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("GlobalExceptionHandler");
+            logger.LogError(exceptionFeature.Error, "Unhandled exception while processing request.");
+        }
+
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        await context.Response.WriteAsJsonAsync(new ApiMessageResponse
+        {
+            Message = ApiMessages.UnexpectedError
+        });
+    });
+});
+
+app.UseStatusCodePages(async statusCodeContext =>
+{
+    var response = statusCodeContext.HttpContext.Response;
+
+    if (response.HasStarted || response.ContentLength.HasValue)
+    {
+        return;
+    }
+
+    var message = response.StatusCode switch
+    {
+        StatusCodes.Status400BadRequest => ApiMessages.BadRequest,
+        StatusCodes.Status401Unauthorized => ApiMessages.Unauthorized,
+        StatusCodes.Status403Forbidden => ApiMessages.Forbidden,
+        StatusCodes.Status404NotFound => ApiMessages.NotFound,
+        _ => null
+    };
+
+    if (message is null)
+    {
+        return;
+    }
+
+    await response.WriteAsJsonAsync(new ApiMessageResponse
+    {
+        Message = message
+    });
+});
 
 app.UseHttpsRedirection();
 app.UseAuthentication();

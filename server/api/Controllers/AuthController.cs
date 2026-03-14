@@ -1,87 +1,72 @@
-using IdeasToVote.Api.Data;
+using IdeasToVote.Api.Constants;
 using IdeasToVote.Api.DTOs;
-using IdeasToVote.Api.Models;
 using IdeasToVote.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace IdeasToVote.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 public class AuthController(
-    ApplicationDbContext dbContext,
-    IPasswordService passwordService,
-    ITokenService tokenService) : ControllerBase
+    IAuthService authService,
+    IUserService userService) : ControllerBase
 {
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
+        var result = await authService.LoginAsync(request);
+
+        if (result.Type == LoginResultType.ValidationError)
         {
-            return BadRequest(new { message = "Username and password are required." });
+            return BadRequest(new ApiMessageResponse { Message = result.Message ?? ApiMessages.UsernamePasswordRequired });
         }
 
-        var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
-        if (user == null || !passwordService.VerifyPassword(request.Password, user.PasswordHash, user.Salt))
+        if (result.Type == LoginResultType.InvalidCredentials)
         {
-            return Unauthorized(new { message = "Invalid credentials." });
+            return Unauthorized(new ApiMessageResponse { Message = result.Message ?? ApiMessages.InvalidCredentials });
         }
 
-        var token = tokenService.GenerateToken(user);
-        var response = new AuthResponse
-        {
-            UserId = user.Id,
-            Username = user.Username,
-            Email = user.Email,
-            Token = token
-        };
-
-        return Ok(response);
+        return Ok(result.Response);
     }
 
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Username) || 
-            string.IsNullOrWhiteSpace(request.Email) || 
-            string.IsNullOrWhiteSpace(request.Password))
+        var result = await authService.RegisterAsync(request);
+
+        if (result.Type == RegisterResultType.ValidationError
+            || result.Type == RegisterResultType.UsernameExists
+            || result.Type == RegisterResultType.EmailExists)
         {
-            return BadRequest(new { message = "Username, email, and password are required." });
+            return BadRequest(new ApiMessageResponse { Message = result.Message ?? ApiMessages.UsernameEmailPasswordRequired });
         }
 
-        if (await dbContext.Users.AnyAsync(u => u.Username == request.Username))
+        return CreatedAtAction(nameof(Register), result.Response);
+    }
+
+    [Authorize]
+    [HttpDelete("users/{id:int}")]
+    public async Task<IActionResult> DeleteUser([FromRoute] int id)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(userIdClaim, out var authenticatedUserId))
         {
-            return BadRequest(new { message = "Username already exists." });
+            return Unauthorized(new ApiMessageResponse { Message = ApiMessages.InvalidAuthenticationToken });
         }
 
-        if (await dbContext.Users.AnyAsync(u => u.Email == request.Email))
+        if (authenticatedUserId != id)
         {
-            return BadRequest(new { message = "Email already exists." });
+            return Forbid();
         }
 
-        var (passwordHash, salt) = passwordService.HashPassword(request.Password);
-        var user = new User
+        var deleteResult = await userService.DeleteUserAsync(id);
+        if (deleteResult == DeleteUserResult.NotFound)
         {
-            Username = request.Username,
-            Email = request.Email,
-            PasswordHash = passwordHash,
-            Salt = salt,
-            CreatedAt = DateTime.UtcNow
-        };
+            return NotFound(new ApiMessageResponse { Message = ApiMessages.UserNotFound });
+        }
 
-        dbContext.Users.Add(user);
-        await dbContext.SaveChangesAsync();
-
-        var token = tokenService.GenerateToken(user);
-        var response = new AuthResponse
-        {
-            UserId = user.Id,
-            Username = user.Username,
-            Email = user.Email,
-            Token = token
-        };
-
-        return CreatedAtAction(nameof(Register), response);
+        return NoContent();
     }
 }
