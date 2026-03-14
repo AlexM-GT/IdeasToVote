@@ -1,0 +1,43 @@
+# ---- OS / Editor ----
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.swp
+*.swo
+
+# ---- Logs ----
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ---- Frontend (Vite/Node) ----
+client/node_modules/
+client/dist/
+client/dist-ssr/
+client/.vite/
+
+# ---- .NET / C# ----
+**/bin/
+**/obj/
+server/api/bin/
+server/api/obj/
+*.rsuser
+
+# ---- Local environment / secrets ----
+.env
+.env.*
+*.local
+
+# ---- Test / coverage output ----
+coverage/
+TestResults/
